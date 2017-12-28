@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Custom installation code.
+ */
+
+use Drupal\block\Entity\Block;
+use Drupal\block_content\Entity\BlockContent;
+
+/**
+ * Helper function to create & place blocks in regions.
+ *
+ * @param array $block_config
+ *   Array of block metadata.
+ */
+function demo_umami_content_build_create_and_place_block(array $block_config) {
+  // Create the custom block.
+  $block_content = BlockContent::create([
+    'type' => $block_config['type'],
+    'info' => $block_config['info'],
+  ]);
+
+  // Create file entity from given image and add target id to image field.
+  foreach ($block_config['fields'] as $key => $image) {
+    if ($key == 'field_banner_image') {
+      $data = file_get_contents(drupal_get_path('theme', 'umami') . '/' . $image);
+      $file = file_save_data($data, 'public://' . basename($image), FILE_EXISTS_RENAME);
+      $block_content->set('field_banner_image', ['target_id' => $file->id()]);
+      continue;
+    }
+    $block_content->set($key, $image);
+  }
+  $block_content->save();
+
+  // Place the block.
+  $block = Block::create([
+    'id' => $block_config['id'],
+    'plugin' => 'block_content:' . $block_content->uuid(),
+    'region' => $block_config['region'],
+    'provider' => 'block_content',
+    'weight' => $block_config['weight'],
+    'theme' => 'umami',
+    'visibility' => $block_config['visibility'],
+    'settings' => $block_config['settings'],
+  ]);
+
+  $block->save();
+}

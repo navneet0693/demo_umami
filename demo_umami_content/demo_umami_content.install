@@ -12,8 +12,8 @@ function demo_umami_content_install() {
   \Drupal::service('demo_umami_content.migration_runner')->run([
     'demo_umami_content__recipe_category',
     'demo_umami_content__tags',
-    // 'demo_umami_content__images_url',
-    // 'demo_umami_content__media_images_url',
+//    'demo_umami_content__images_url',
+//    'demo_umami_content__media_images_url',
     'demo_umami_content__authors',
     'demo_umami_content__page_authors',
     'demo_umami_content__pages',
@@ -21,9 +21,15 @@ function demo_umami_content_install() {
     'demo_umami_content__article_authors',
     'demo_umami_content__article_tags',
     'demo_umami_content__article',
-    // 'demo_umami_content__article_images_url',
-    // 'demo_umami_content__article_media_images_url',
+//    'demo_umami_content__article_images_url',
+//    'demo_umami_content__article_media_images_url',
   ]);
+
+  // Create required blocks & place them in regions based on block config.
+  $blocks = demo_umami_content_get_custom_block_content();
+  foreach ($blocks as $block_config) {
+    demo_umami_content_build_create_and_place_block($block_config);
+  }
 }
 
 /**
@@ -45,4 +51,45 @@ function demo_umami_content_uninstall() {
 //    'demo_umami_content__article_images_url',
 //    'demo_umami_content__article_media_images_url',
   ]);
+}
+
+/**
+ * Helper function to get custom block metadata.
+ *
+ * @return array
+ *   Array of block configs.
+ */
+function demo_umami_content_get_custom_block_content() {
+  $blocks = [
+    'umami_recipes_banner' => [
+      'id' => 'umami_recipes_banner',
+      'info' => 'Umami Recipes Banner',
+      'type' => 'banner_block',
+      'region' => 'banner_top',
+      'weight' => 0,
+      'visibility' => [
+        'request_path' => [
+          'id' => 'request_path',
+          'pages' => '/recipes',
+          'negate' => '',
+          'context_mapping' => [],
+        ],
+      ],
+      'theme' => 'umami',
+      'settings' => [],
+      'fields' => [
+        'field_title' => [
+          'value' => 'Baked Camembert with garlic, calvados and salami',
+        ],
+        'field_content_link' => [
+          'target_id' => 10,
+        ],
+        'field_summary' => [
+          'value' => 'Nullam id dolor id nibh ultricies vehicula ut id elit. Nullam id dolor id nibh ultricies vehicula ut id elit. Nullam id dolor id nibh ultricies vehicula ut id elit.',
+        ],
+        'field_banner_image' => 'images/jpg/placeholder--atharva-lele-210748-pshopped.jpg',
+      ],
+    ],
+  ];
+  return $blocks;
 }
