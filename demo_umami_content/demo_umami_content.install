@@ -4,10 +4,13 @@
  * @file
  * Module installation file.
  */
-use \Drupal\node\Entity\Node;
-use \Drupal\taxonomy\Entity\Term;
-use \Drupal\user\Entity\User;
-use \Drupal\file\Entity\File;
+
+use Drupal\node\Entity\Node;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\user\Entity\User;
+use Drupal\file\Entity\File;
+use Drupal\block_content\Entity\BlockContent;
+
 
 /**
  * Implements hook_install().
@@ -19,6 +22,8 @@ function demo_umami_content_install() {
   _install_demo_umami_content_recpies();
   // Install default pages.
   _install_demo_umami_content_pages();
+  // Install default blocks.
+  _install_demo_umami_content_block_content();
 }
 
 /**
@@ -63,7 +68,7 @@ function _install_demo_umami_content_pages() {
       }
 
       // Create Node.
-      $node = Node::create($values) ;
+      $node = Node::create($values);
       $node->save();
     }
     fclose($handle);
@@ -86,7 +91,8 @@ function _install_demo_umami_content_recpies() {
 
       $values = [
         'type' => 'recipe',
-        'title' => $data[0], // Title field.
+      // Title field.
+        'title' => $data[0],
       ];
       // Set article author.
       if (!empty($data[3])) {
@@ -105,7 +111,7 @@ function _install_demo_umami_content_recpies() {
       if (!empty($data[4])) {
         $values['field_recipe_category'] = [];
         $tags = array_filter(explode(',', $data[4]));
-        foreach ($tags as $term ) {
+        foreach ($tags as $term) {
           $values['field_recipe_category'][] = ['target_id' => _get_term($term, 'recipe_category')];
         }
       }
@@ -141,12 +147,12 @@ function _install_demo_umami_content_recpies() {
       if (!empty($data[12])) {
         $values['field_tags'] = [];
         $tags = array_filter(explode(',', $data[12]));
-        foreach ($tags as $term ) {
+        foreach ($tags as $term) {
           $values['field_tags'][] = ['target_id' => _get_term($term)];
         }
       }
 
-      $node = \Drupal\node\Entity\Node::create($values) ;
+      $node = Node::create($values);
       $node->save();
     }
     fclose($handle);
@@ -186,7 +192,7 @@ function _install_demo_umami_content_articles() {
       if (!empty($data[5])) {
         $values['field_tags'] = [];
         $tags = explode(',', $data[5]);
-        foreach ($tags as $term ) {
+        foreach ($tags as $term) {
           $values['field_tags'][] = ['target_id' => _get_term($term)];
         }
       }
@@ -201,7 +207,7 @@ function _install_demo_umami_content_articles() {
       }
 
       // Create Node.
-      $node = Node::create($values) ;
+      $node = Node::create($values);
       $node->save();
     }
     fclose($handle);
@@ -209,8 +215,8 @@ function _install_demo_umami_content_articles() {
 }
 
 /**
-* Retrieves a tid for use from taxonomy.
-*/
+ * Retrieves a tid for use from taxonomy.
+ */
 function _get_term($term, $vocabulary = 'tags') {
   if ($terms = taxonomy_term_load_multiple_by_name($term, $vocabulary)) {
     $term = reset($terms);
@@ -246,11 +252,52 @@ function _get_user($name) {
  */
 function _get_image_file($path) {
   $filename = basename($path);
-  $uri  = file_unmanaged_copy($path, 'public://' . $filename, FILE_EXISTS_REPLACE);
+  $uri = file_unmanaged_copy($path, 'public://' . $filename, FILE_EXISTS_REPLACE);
   $file = File::create([
     'uri' => $uri,
     'status' => 1,
   ]);
   $file->save();
   return $file->id();
+}
+
+/**
+ * Helper for creating to custom block.
+ */
+function _install_demo_umami_content_block_content() {
+
+  $blocks = [
+    'umami_recipes_banner' => [
+      'uuid' => '4c7d58a3-a45d-412d-9068-259c57e40541',
+      'info' => 'Umami Recipes Banner',
+      'type' => 'banner_block',
+      'fields' => [
+        'field_title' => [
+          'value' => 'Baked Camembert with garlic, calvados and salami',
+        ],
+        'field_content_link' => [
+          'target_id' => 10,
+        ],
+        'field_summary' => [
+          'value' => 'Nullam id dolor id nibh ultricies vehicula ut id elit. Nullam id dolor id nibh ultricies vehicula ut id elit. Nullam id dolor id nibh ultricies vehicula ut id elit.',
+        ],
+        'field_banner_image' => 'images/jpg/placeholder--atharva-lele-210748-pshopped.jpg',
+      ],
+    ],
+  ];
+
+  foreach ($blocks as $block) {
+    $block_content = BlockContent::create([
+      'type' => $block['type'],
+      'info' => $block['info'],
+      'uuid' => $block['uuid'],
+    ]);
+    $block_content->set('field_title', $block['fields']['field_title']);
+    $block_content->set('field_content_link', $block['fields']['field_content_link']);
+    $block_content->set('field_summary', $block['fields']['field_summary']);
+
+    $file_path = drupal_get_path('theme', 'umami') . '/' . $block['fields']['field_banner_image'];;
+    $block_content->set('field_banner_image', ['target_id' => _get_image_file($file_path)]);
+    $block_content->save();
+  }
 }
