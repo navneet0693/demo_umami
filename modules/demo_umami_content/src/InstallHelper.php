@@ -299,9 +299,9 @@ class InstallHelper implements ContainerInjectionInterface {
         ],
         'field_content_link' => [
           'uri' => 'internal:' . call_user_func(function () {
-              $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties(['title' => 'Super easy vegetarian pasta bake']);
-              $node = reset($nodes);
-              return $this->aliasManager->getAliasByPath('/node/' . $node->id());
+            $nodes = $this->entityTypeManager->getStorage('node')->loadByProperties(['title' => 'Super easy vegetarian pasta bake']);
+            $node = reset($nodes);
+            return $this->aliasManager->getAliasByPath('/node/' . $node->id());
           }),
           'title' => 'Super easy vegetarian pasta bake',
         ],

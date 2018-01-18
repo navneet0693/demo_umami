@@ -4,6 +4,7 @@ namespace Drupal\demo_umami\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element\PathElement;
 
 /**
  * Provides a 'Promo banner' block for footer.
@@ -71,10 +72,12 @@ class UmamiFooterPromo extends BlockBase {
     ];
 
     $form['findmore']['url'] = [
-      '#type' => 'url',
+      '#type' => 'path',
+      '#convert_path' => PathElement::CONVERT_NONE,
+      '#validate_path' => FALSE,
       '#title' => $this->t('URL'),
       '#default_value' => $this->configuration['findmore_url'],
-      '#description' => $this->t('Enter an absolute url. Eg: https://www.drupal.org'),
+      '#description' => $this->t('Enter an relative or absolute url. Eg: /about-umami or https://www.drupal.org'),
     ];
 
     $form['findmore']['text'] = [
